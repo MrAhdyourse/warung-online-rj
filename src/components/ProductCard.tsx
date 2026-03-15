@@ -1,5 +1,5 @@
 import React from 'react';
-import { Product } from '../data/products';
+import { Product } from '../data/products/index';
 import { Star, ShoppingCart, CheckCircle2, XCircle } from 'lucide-react';
 
 interface ProductCardProps {

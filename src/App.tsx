@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import CartDrawer from './components/CartDrawer';
-import { PRODUCTS, Product } from './data/products';
+import { PRODUCTS, Product } from './data/products/index';
 import { CartProvider, useCart } from './context/CartContext';
+import { SearchProvider, useSearch } from './context/SearchContext';
 import { SITE_CONFIG } from './data/config';
-import { Truck, ShieldCheck, Zap, Coffee, Utensils, PenTool, ShoppingBag, Candy, Droplets, Ticket, X, Minus, Plus } from 'lucide-react';
+import { Truck, ShieldCheck, Zap, Coffee, Utensils, PenTool, ShoppingBag, Candy, Droplets, Ticket, X, Minus, Plus, Search } from 'lucide-react';
 import './styles/App.css';
 
-// Modal Component for Quantity Selection
 const QuantityModal = ({ product, isOpen, onClose, onAdd }: { product: Product | null, isOpen: boolean, onClose: () => void, onAdd: (qty: number) => void }) => {
   const [qty, setQty] = useState(1);
 
@@ -36,7 +36,7 @@ const QuantityModal = ({ product, isOpen, onClose, onAdd }: { product: Product |
             <h3>{product.name}</h3>
             <p className="modal-desc">{product.description}</p>
             <p className="modal-price">{formatPrice(product.price)} / {product.unit}</p>
-            
+
             <div className="modal-qty-selector">
               <span>Jumlah:</span>
               <div className="qty-controls">
@@ -45,7 +45,7 @@ const QuantityModal = ({ product, isOpen, onClose, onAdd }: { product: Product |
                 <button onClick={() => setQty(Math.min(product.stock, qty + 1))}><Plus size={14} /></button>
               </div>
             </div>
-            
+
             <button className="modal-add-btn" onClick={() => { onAdd(qty); onClose(); }}>
               Masukkan ke Keranjang
             </button>
@@ -56,21 +56,19 @@ const QuantityModal = ({ product, isOpen, onClose, onAdd }: { product: Product |
   );
 };
 
-// Main App Component with Cart Provider inside
 function AppContent() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { addToCart } = useCart();
-  
-  // Real-time Countdown (2 days)
+  const { searchQuery, searchResults, isSearching, clearSearch } = useSearch();
+
   const [timeLeft, setTimeLeft] = useState<{days:number, hours:number, minutes:number, seconds:number}>({days:0, hours:0, minutes:0, seconds:0});
 
   useEffect(() => {
-    // Set target date to 2 days from now, saved in localStorage
     let targetStr = localStorage.getItem('sale_target_date');
     let targetDate: number;
-    
+
     if (!targetStr) {
       targetDate = new Date().getTime() + (2 * 24 * 60 * 60 * 1000);
       localStorage.setItem('sale_target_date', targetDate.toString());
@@ -97,6 +95,21 @@ function AppContent() {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Determine which products to show based on search or category
+  const getDisplayProducts = () => {
+    // If there's a search query, show search results
+    if (searchQuery.trim()) {
+      return searchResults;
+    }
+    // Otherwise, show category-filtered products
+    return activeCategory === 'all' 
+      ? PRODUCTS 
+      : PRODUCTS.filter(p => p.category === activeCategory);
+  };
+
+  const displayProducts = getDisplayProducts();
+  const isSearchMode = searchQuery.trim().length > 0;
 
   const filteredProducts = activeCategory === 'all' 
     ? PRODUCTS 
@@ -125,42 +138,38 @@ function AppContent() {
       />
 
       <main className="container">
-        {/* Banner Section */}
         <section className="banner-grid">
           <div className="main-banner">
-            <div style={{ padding: '2rem' }}>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: 900, textShadow: '2px 2px 10px rgba(0,0,0,0.2)' }}>GAJIAN SALE!</h2>
-              <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Sembako Murah, Berakhir Dalam:</p>
-              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+            <div className="banner-content">
+              <h2 className="banner-title">GAJIAN SALE!</h2>
+              <p className="banner-subtitle">Sembako Murah, Berakhir Dalam:</p>
+              <div className="timer-row">
                   <div className="timer-box">{timeLeft.days}d</div>
-                  <div style={{ color: '#333', fontWeight: 800, alignSelf: 'center' }}>:</div>
+                  <div className="timer-sep">:</div>
                   <div className="timer-box">{timeLeft.hours}h</div>
-                  <div style={{ color: '#333', fontWeight: 800, alignSelf: 'center' }}>:</div>
+                  <div className="timer-sep">:</div>
                   <div className="timer-box">{timeLeft.minutes}m</div>
-                  <div style={{ color: '#333', fontWeight: 800, alignSelf: 'center' }}>:</div>
+                  <div className="timer-sep">:</div>
                   <div className="timer-box">{timeLeft.seconds}s</div>
               </div>
             </div>
           </div>
           <div className="side-banners">
-            <div className="side-banner" style={{ background: '#26aa99', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: -10, left: -10, width: '50px', height: '50px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
-              <span style={{ fontWeight: 800, zIndex: 1 }}>GRATIS ONGKIR RP0</span>
+            <div className="side-banner side-banner-green">
+              <span>GRATIS ONGKIR RP0</span>
             </div>
-            <div className="side-banner" style={{ background: '#00458e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-              <span style={{ fontWeight: 800 }}>CASHBACK 100%*</span>
+            <div className="side-banner side-banner-blue">
+              <span>CASHBACK 100%*</span>
             </div>
           </div>
         </section>
 
-        {/* Features Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'white', borderRadius: '4px', margin: '1rem 0', color: '#ee4d2d', fontSize: '0.85rem', fontWeight: 500, boxShadow: 'var(--shadow)' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ShieldCheck size={16} /> 100% Original</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Truck size={16} /> Pengiriman Instan</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ShoppingBag size={16} /> Stok Selalu Ready</span>
+        <div className="trust-badges">
+          <span><ShieldCheck size={16} /> 100% Original</span>
+          <span><Truck size={16} /> Pengiriman Instan</span>
+          <span><ShoppingBag size={16} /> Stok Selalu Ready</span>
         </div>
 
-        {/* Vouchers Section */}
         <section>
           <div className="section-header" style={{ background: 'transparent', padding: '1rem 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -193,7 +202,6 @@ function AppContent() {
           </div>
         </section>
 
-        {/* Categories Grid */}
         <section>
           <div className="section-header">
             <h3 style={{ textTransform: 'uppercase', color: '#757575', fontWeight: 500 }}>Kategori Pilihan</h3>
@@ -226,7 +234,6 @@ function AppContent() {
           </div>
         </section>
 
-        {/* Flash Sale Section */}
         <section>
           <div className="section-header" style={{ borderBottom: 'none', background: 'transparent', padding: '1rem 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -245,23 +252,89 @@ function AppContent() {
           </div>
         </section>
 
-        {/* Main Product Section */}
-        <section>
-          <div className="section-header">
-            <h3 style={{ textTransform: 'uppercase', color: '#ee4d2d', borderBottom: '4px solid #ee4d2d', paddingBottom: '0.5rem' }}>
-              Rekomendasi Untukmu
-            </h3>
-          </div>
-          <div className="product-grid">
-            {filteredProducts.map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                onAddToCart={() => handleAddWithQty(product)}
-              />
-            ))}
-          </div>
-        </section>
+        {/* Search Results Section - shown when searching */}
+        {isSearchMode && (
+          <section>
+            <div className="section-header" style={{ background: '#fff3e0', borderRadius: '4px 4px 0 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Search size={20} color="#ee4d2d" />
+                  <h3 style={{ color: '#ee4d2d', fontSize: '1.1rem', fontWeight: 700 }}>
+                    Hasil Pencarian: "{searchQuery}"
+                  </h3>
+                  {!isSearching && (
+                    <span style={{ color: '#757575', fontSize: '0.9rem', fontWeight: 400 }}>
+                      ({displayProducts.length} produk ditemukan)
+                    </span>
+                  )}
+                </div>
+                <button 
+                  onClick={clearSearch}
+                  style={{ 
+                    background: 'transparent', 
+                    border: '1px solid #ee4d2d', 
+                    color: '#ee4d2d',
+                    padding: '4px 12px',
+                    borderRadius: '4px',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Reset Pencarian
+                </button>
+              </div>
+            </div>
+            
+            {isSearching ? (
+              <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '0 0 4px 4px' }}>
+                <div className="loading-spinner"></div>
+                <p style={{ color: '#757575', marginTop: '1rem' }}>Mencari produk...</p>
+              </div>
+            ) : displayProducts.length > 0 ? (
+              <div className="product-grid">
+                {displayProducts.map(product => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    onAddToCart={() => handleAddWithQty(product)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '0 0 4px 4px' }}>
+                <Search size={48} color="#ccc" style={{ marginBottom: '1rem' }} />
+                <h4 style={{ color: '#333', marginBottom: '0.5rem' }}>Produk tidak ditemukan</h4>
+                <p style={{ color: '#757575', fontSize: '0.9rem' }}>
+                  Tidak ada produk yang cocok dengan "{searchQuery}"
+                </p>
+                <p style={{ color: '#999', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                  Coba kata kunci lain atau telusuri kategori
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Normal Recommendations Section - shown when NOT searching */}
+        {!isSearchMode && (
+          <section>
+            <div className="section-header">
+              <h3 style={{ textTransform: 'uppercase', color: '#ee4d2d', borderBottom: '4px solid #ee4d2d', paddingBottom: '0.5rem' }}>
+                Rekomendasi Untukmu
+              </h3>
+            </div>
+            <div className="product-grid">
+              {filteredProducts.map(product => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  onAddToCart={() => handleAddWithQty(product)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <footer>
@@ -287,25 +360,22 @@ function AppContent() {
             </div>
             <div>
               <h4>Pembayaran Aman</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
                 {[
-                  { name: 'BCA', color: '#0060af', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Bank_Central_Asia.svg/512px-Bank_Central_Asia.svg.png' },
-                  { name: 'BNI', color: '#f15a23', url: 'https://upload.wikimedia.org/wikipedia/id/thumb/5/55/BNI_logo.svg/512px-BNI_logo.svg.png' },
-                  { name: 'MANDIRI', color: '#003d79', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Bank_Mandiri_logo_2016.svg/512px-Bank_Mandiri_logo_2016.svg.png' },
-                  { name: 'GOPAY', color: '#00aade', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/512px-Gopay_logo.svg.png' },
-                  { name: 'OVO', color: '#4c2a86', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Logo_ovo_purple.svg/512px-Logo_ovo_purple.svg.png' },
-                  { name: 'SHOPEEPAY', color: '#ee4d2d', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/ShopeePay_logo.svg/512px-ShopeePay_logo.svg.png' }
+                  { name: 'BCA', url: '/assets/payment/bca.svg' },
+                  { name: 'BNI', url: '/assets/payment/bni.svg' },
+                  { name: 'Mandiri', url: '/assets/payment/mandiri.svg' },
+                  { name: 'GoPay', url: '/assets/payment/gopay.svg' },
+                  { name: 'OVO', url: '/assets/payment/ovo.svg' },
+                  { name: 'ShopeePay', url: '/assets/payment/shopeepay.svg' },
+                  { name: 'DANA', url: '/assets/payment/dana.svg' },
+                  { name: 'LinkAja', url: '/assets/payment/linkaja.svg' }
                 ].map(p => (
-                  <div key={p.name} style={{ height: '35px', background: 'white', border: '1px solid #eee', borderRadius: '4px', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div key={p.name} style={{ height: '38px', background: 'white', border: '1px solid #eee', borderRadius: '4px', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <img 
                       src={p.url} 
                       alt={p.name} 
                       style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.parentElement!.innerHTML = `<span style="font-size:8px; font-weight:bold; color:${p.color}">${p.name}</span>`;
-                      }}
                     />
                   </div>
                 ))}
@@ -313,16 +383,43 @@ function AppContent() {
             </div>
             <div>
               <h4>Ikuti Kami</h4>
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div className="social-icon" style={{ background: '#25D366', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png" alt="WA" style={{ width: '18px', height: '18px' }} />
-                </div>
-                <div className="social-icon" style={{ background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Instagram_button_icon.svg/512px-Instagram_button_icon.svg.png" alt="IG" style={{ width: '18px', height: '18px' }} />
-                </div>
-                <div className="social-icon" style={{ background: 'black', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logotipo_de_TikTok.svg/512px-Logotipo_de_TikTok.svg.png" alt="TikTok" style={{ width: '18px', height: '18px' }} />
-                </div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <a 
+                  href={SITE_CONFIG.socialLinks?.whatsapp} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="social-icon"
+                  title="WhatsApp"
+                >
+                  <img src="/assets/social/whatsapp.svg" alt="WhatsApp" style={{ width: '36px', height: '36px' }} />
+                </a>
+                <a 
+                  href={SITE_CONFIG.socialLinks?.instagram} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="social-icon"
+                  title="Instagram"
+                >
+                  <img src="/assets/social/instagram.svg" alt="Instagram" style={{ width: '36px', height: '36px' }} />
+                </a>
+                <a 
+                  href={SITE_CONFIG.socialLinks?.tiktok} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="social-icon"
+                  title="TikTok"
+                >
+                  <img src="/assets/social/tiktok.svg" alt="TikTok" style={{ width: '36px', height: '36px' }} />
+                </a>
+                <a 
+                  href={SITE_CONFIG.socialLinks?.facebook} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="social-icon"
+                  title="Facebook"
+                >
+                  <img src="/assets/social/facebook.svg" alt="Facebook" style={{ width: '36px', height: '36px' }} />
+                </a>
               </div>
             </div>
           </div>
@@ -334,7 +431,7 @@ function AppContent() {
       </footer>
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-      
+
       <QuantityModal 
         isOpen={!!selectedProduct} 
         product={selectedProduct} 
@@ -348,7 +445,9 @@ function AppContent() {
 function App() {
   return (
     <CartProvider>
-      <AppContent />
+      <SearchProvider>
+        <AppContent />
+      </SearchProvider>
     </CartProvider>
   );
 }

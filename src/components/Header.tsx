@@ -1,6 +1,8 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
-import { ShoppingCart, Search, Bell, HelpCircle, Globe } from 'lucide-react';
+import { useSearch } from '../context/SearchContext';
+import { ShoppingCart, Search, Bell, HelpCircle, Globe, X } from 'lucide-react';
+import { SITE_CONFIG } from '../data/config';
 
 interface HeaderProps {
   activeCategory: string;
@@ -10,6 +12,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ activeCategory, setActiveCategory, onOpenCart }) => {
   const { totalItems } = useCart();
+  const { searchQuery, setSearchQuery, clearSearch } = useSearch();
 
   return (
     <header>
@@ -20,7 +23,18 @@ const Header: React.FC<HeaderProps> = ({ activeCategory, setActiveCategory, onOp
             <span>Seller Centre</span>
             <span>Mulai Jual</span>
             <span>Download</span>
-            <span>Ikuti kami di</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Ikuti kami di
+              <a href={SITE_CONFIG.socialLinks?.instagram} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center' }}>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/50px-Instagram_icon.png" alt="Instagram" style={{ width: '16px', height: '16px' }} />
+              </a>
+              <a href={SITE_CONFIG.socialLinks?.tiktok} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center' }}>
+                <img src="https://upload.wikimedia.org/wikipedia/en/thumb/a/a9/TikTok_logo.svg/50px-TikTok_logo.svg.png" alt="TikTok" style={{ width: '16px', height: '16px' }} />
+              </a>
+              <a href={SITE_CONFIG.socialLinks?.facebook} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center' }}>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/50px-Facebook_Logo_%282019%29.png" alt="Facebook" style={{ width: '16px', height: '16px' }} />
+              </a>
+            </span>
           </div>
           <div className="top-bar-links">
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Bell size={14} /> Notifikasi</span>
@@ -38,14 +52,25 @@ const Header: React.FC<HeaderProps> = ({ activeCategory, setActiveCategory, onOp
           </div>
 
           <div className="search-bar">
-            <input type="text" placeholder="Cari kebutuhan ATK & Sembako di sini..." />
+            <input 
+              type="text" 
+              placeholder="Cari kebutuhan ATK & Sembako di sini..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={searchQuery ? 'has-value' : ''}
+            />
+            {searchQuery && (
+              <button className="search-clear" onClick={clearSearch}>
+                <X size={16} />
+              </button>
+            )}
             <button className="search-btn">
               <Search size={18} />
             </button>
           </div>
 
           <div className="cart-icon-wrapper" onClick={onOpenCart}>
-            <ShoppingCart size={26} />
+            <ShoppingCart size={28} strokeWidth={2.5} />
             {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
           </div>
         </div>

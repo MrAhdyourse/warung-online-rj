@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
 import { SITE_CONFIG } from '../data/config';
-import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, Trash2, MessageCircle } from 'lucide-react';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -43,8 +43,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
       <div className={`cart-overlay ${isOpen ? 'open' : ''}`} onClick={onClose} />
       <div className={`cart-drawer ${isOpen ? 'open' : ''}`}>
         <div className="cart-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <ShoppingBag size={20} color="var(--primary)" />
+          <div className="cart-header-title">
+            <ShoppingBag size={24} color="var(--primary)" />
             <h2>Keranjang Belanja</h2>
           </div>
           <button className="close-btn" onClick={onClose}>
@@ -54,13 +54,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
 
         <div className="cart-items">
           {cart.length === 0 ? (
-            <div style={{ textAlign: 'center', marginTop: '4rem', color: '#757575' }}>
-              <ShoppingBag size={64} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+            <div className="cart-empty">
+              <ShoppingBag size={80} strokeWidth={1} />
               <p>Keranjangmu masih kosong</p>
-              <button 
-                onClick={onClose}
-                style={{ marginTop: '1rem', padding: '0.5rem 1.5rem', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'white', borderRadius: '4px', cursor: 'pointer' }}
-              >
+              <span>Yuk, mulai belanja sekarang!</span>
+              <button className="cart-empty-btn" onClick={onClose}>
                 Belanja Sekarang
               </button>
             </div>
@@ -69,31 +67,29 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
               <div key={item.id} className="cart-item">
                 <img src={item.image} alt={item.name} className="cart-item-img" />
                 <div className="cart-item-info">
-                  <h4 style={{ fontSize: '0.9rem', marginBottom: '0.25rem', fontWeight: 500 }}>{item.name}</h4>
-                  <p style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.95rem' }}>{formatPrice(item.price)}</p>
+                  <h4 className="cart-item-name">{item.name}</h4>
+                  <p className="cart-item-price">{formatPrice(item.price)}</p>
                   
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
+                  <div className="cart-item-actions">
                     <div className="qty-controls">
                       <button 
-                        className="qty-btn" 
+                        className="qty-btn qty-btn-minus" 
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        <Minus size={12} />
+                        <Minus size={14} />
                       </button>
-                      <span style={{ minWidth: '30px', textAlign: 'center', fontSize: '0.9rem' }}>{item.quantity}</span>
+                      <span className="qty-value">{item.quantity}</span>
                       <button 
-                        className="qty-btn" 
+                        className="qty-btn qty-btn-plus" 
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        <Plus size={12} />
+                        <Plus size={14} />
                       </button>
                     </div>
                     
                     <button 
+                      className="cart-item-delete"
                       onClick={() => removeFromCart(item.id)}
-                      style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', padding: '4px' }}
                     >
                       <Trash2 size={18} />
                     </button>
@@ -106,14 +102,15 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
 
         {cart.length > 0 && (
           <div className="cart-footer">
-            <div className="cart-total" style={{ marginBottom: '1rem' }}>
-              <span style={{ color: '#757575', fontSize: '1rem', fontWeight: 400 }}>Total Pesanan:</span>
-              <span style={{ color: 'var(--primary)', fontSize: '1.5rem' }}>{formatPrice(totalPrice)}</span>
+            <div className="cart-total">
+              <span className="cart-total-label">Total Pesanan:</span>
+              <span className="cart-total-value">{formatPrice(totalPrice)}</span>
             </div>
             <button className="checkout-btn" onClick={handleCheckout}>
-              Checkout Sekarang (WhatsApp)
+              <MessageCircle size={20} />
+              <span>Checkout via WhatsApp</span>
             </button>
-            <p style={{ textAlign: 'center', fontSize: '0.7rem', color: '#757575', marginTop: '0.75rem' }}>
+            <p className="cart-footer-note">
               Pesanan akan dikirimkan melalui WhatsApp ke admin kami.
             </p>
           </div>
