@@ -1,8 +1,14 @@
 @echo off
 setlocal enabledelayedexpansion
+
+REM Change to script directory
+cd /d "%~dp0"
+
 echo ============================================
 echo   BUILD + PUSH to GitHub
 echo ============================================
+echo.
+echo [INFO] Working directory: %cd%
 echo.
 
 REM Check if node_modules exists and should be ignored
@@ -28,7 +34,7 @@ if not exist .git (
 )
 
 REM Add remote origin if not exists
-git remote | findstr /C "origin" >nul
+git remote | findstr "origin" >nul
 if !errorlevel! neq 0 (
     echo [STEP 3] Adding remote origin...
     git remote add origin https://github.com/MrAhdyourse/warung-online-rj.git
@@ -69,5 +75,6 @@ echo ============================================
 echo   PUSH COMPLETED SUCCESSFULLY!
 echo ============================================
 echo Repository: https://github.com/MrAhdyourse/warung-online-rj
+echo Website: https://mrahdyourse.github.io/warung-online-rj
 echo.
 pause
