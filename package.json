@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://USERNAME.github.io/warung-online",
+  "homepage": "https://mrahdyourse.github.io/warung-online-rj",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
